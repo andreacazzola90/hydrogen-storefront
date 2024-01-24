@@ -6,6 +6,7 @@ import type {
   FeaturedCollectionFragment,
   RecommendedProductsQuery,
 } from 'storefrontapi.generated';
+import Collections from './($locale).collections._index';
 
 export const meta: MetaFunction = () => {
   return [{title: 'Hydrogen | Home'}];
@@ -16,14 +17,21 @@ export async function loader({context}: LoaderFunctionArgs) {
   const {collections} = await storefront.query(FEATURED_COLLECTION_QUERY);
   const featuredCollection = collections.nodes[0];
   const recommendedProducts = storefront.query(RECOMMENDED_PRODUCTS_QUERY);
+  const collections_query = await context.storefront.query(COLLECTIONS_QUERY);
 
-  return defer({featuredCollection, recommendedProducts});
+  return defer({featuredCollection, recommendedProducts, collections_query});
 }
 
 export default function Homepage() {
+  const collections = useLoaderData();
+  console.log(collections);
+
   const data = useLoaderData<typeof loader>();
   return (
     <div className="home">
+      <RecommendedCollections
+        collections={data.collections_query}
+      ></RecommendedCollections>
       <FeaturedCollection collection={data.featuredCollection} />
       <RecommendedProducts products={data.recommendedProducts} />
     </div>
@@ -90,6 +98,21 @@ function RecommendedProducts({
   );
 }
 
+function RecommendedCollections({collections}: {collections: any}) {
+  return (
+    <section className="w-full gap-4">
+      <h2 className="whitespace-pre-wrap max-w-prose font-bold text-lead">
+        Collections
+      </h2>
+      <div className="grid-flow-row grid gap-2 gap-y-6 md:gap-4 lg:gap-6 grid-cols-1 sm:grid-cols-3">
+        {collections.collections.nodes.map((collection: any, i: number) => (
+          <p key={i}>{collection.title}</p>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 const FEATURED_COLLECTION_QUERY = `#graphql
   fragment FeaturedCollection on Collection {
     id
@@ -143,3 +166,15 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
     }
   }
 ` as const;
+
+const COLLECTIONS_QUERY = `#graphql
+  query FeaturedCollections {
+    collections(first: 3, query: "collection_type:smart") {
+      nodes {
+        id
+        title
+        handle
+      }
+    }
+  }
+`;
