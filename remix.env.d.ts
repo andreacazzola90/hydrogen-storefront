@@ -35,7 +35,11 @@ declare global {
   /**
    * The I18nLocale used for Storefront API query context.
    */
-  type I18nLocale = {language: LanguageCode; country: CountryCode};
+  type I18nLocale = {
+    language: LanguageCode;
+    country: CountryCode;
+    pathPrefix: string;
+  };
 }
 
 declare module '@shopify/remix-oxygen' {
